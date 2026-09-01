@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+.agents/
+.claude/
+.codex/
+.pytest_cache/
+.ruff_cache/
+.venv/
+.tmp/
+demo_outputs/
+experiments/
+pre_trained_weights/
+results/

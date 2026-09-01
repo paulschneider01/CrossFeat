@@ -1,0 +1,35 @@
+{
+    "description": "Train/Val/Test splits for ReMIND dataset. 114 cases total. Split pattern: 2 train, 1 val, 2 train, 1 test, repeat until val and test each have 17 cases, then remaining go to train.",
+    "splits": {
+        "train": [
+            "Case001", "Case002", "Case004", "Case005", "Case007", "Case008", "Case010", "Case011", "Case013", "Case014",
+            "Case016", "Case017", "Case019", "Case020", "Case022", "Case023", "Case025", "Case026", "Case028", "Case029",
+            "Case031", "Case032", "Case034", "Case035", "Case037", "Case038", "Case040", "Case041", "Case043", "Case044",
+            "Case046", "Case047", "Case049", "Case050", "Case052", "Case053", "Case055", "Case056", "Case058", "Case059",
+            "Case061", "Case062", "Case064", "Case065", "Case067", "Case068", "Case070", "Case071", "Case073", "Case074",
+            "Case076", "Case077", "Case079", "Case080", "Case082", "Case083", "Case085", "Case086", "Case088", "Case089",
+            "Case091", "Case092", "Case094", "Case095", "Case097", "Case098", "Case100", "Case101", "Case103", "Case104",
+            "Case105", "Case106", "Case107", "Case108", "Case109", "Case110", "Case111", "Case112", "Case113", "Case114"
+        ],
+        "val": [
+            "Case003", "Case009", "Case015", "Case021", "Case027",
+            "Case033", "Case039", "Case045", "Case051", "Case057",
+            "Case063", "Case069", "Case075", "Case081", "Case087",
+            "Case093", "Case099"
+        ],
+        "test": [
+            "Case006", "Case012", "Case018", "Case024", "Case030",
+            "Case036", "Case042", "Case048", "Case054", "Case060",
+            "Case066", "Case072", "Case078", "Case084", "Case090",
+            "Case096", "Case102"
+        ]
+    },
+    "notes": [
+        "Cases distributed as: 2 train, 1 val, 2 train, 1 test, repeating sequence (in increasing order) until 17 val and test cases, then remaining to train.",
+        "Total: 80 train / 17 val / 17 test (114 assigned cases).",
+        "PCA and all learned representations are fitted on TRAIN set only",
+        "Validation set is used exclusively for hyperparameter tuning and model selection",
+        "Test set is held out strictly for final evaluation and reporting",
+        "Case ordering is deterministic to ensure reproducibility"
+    ]
+}

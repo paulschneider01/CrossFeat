@@ -1,0 +1,57 @@
+name: custom_pair
+description: "CrossFeat for one aligned 2D modality pair"
+
+datasets:
+  - name: paired_folders
+    data_root: /absolute/path/to/my_dataset
+    modalities: [modality_a, modality_b]
+    pairs:
+      - {source: modality_a, target: modality_b}
+
+# Model
+model: vae
+d_geom: 128
+d_app: 64
+hidden_dim: 256
+dropout: 0.15
+condition_decoder: true
+variational: true
+variational_app_only: true
+adversarial: true
+
+# Descriptor extraction
+descriptor: sift
+pca_dim: 128
+pair_sampling: 2d_sift_dual
+rootsift: true
+max_kpts_per_slice: 1024
+
+# Training
+epochs: 100
+batch_size: 512
+lr: 0.0003
+weight_decay: 0.0001
+patience: 40
+samples_per_case: 4096
+extraction_workers: 4
+
+# Reproducibility and output
+seed: 42
+device: cpu  # Change to cuda for GPU training.
+output_dir: experiments
+exp: crossfeat
+
+# Standard CrossFeat losses
+vae_recon: 1.0
+vae_geom: 0.5
+vae_crossing: 1.0
+vae_contrastive: 0.5
+temperature: 0.05
+vae_kl_geom: 0.0
+vae_kl_app: 0.01
+vae_adversarial: 0.03
+vae_app_repulsion: 0.0
+vae_probe_c_margin: 0.1
+vae_probe_c_target: 0.05
+vae_probe_c_ridge: 0.001
+vae_descriptor_noise_std: 0.05

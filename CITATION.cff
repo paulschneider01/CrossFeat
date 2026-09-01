@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use CrossFeat, please cite the paper and this software."
+title: "CrossFeat"
+type: software
+authors:
+  - family-names: Schneider
+    given-names: Paul
+  - family-names: Haouchine
+    given-names: Nazim
+repository-code: "https://github.com/paulschneider01/CrossFeat"
+license: MIT
+date-released: 2026-09-01
