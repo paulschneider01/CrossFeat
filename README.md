@@ -1,19 +1,34 @@
-# CrossFeat
+<h1 align="center">CrossFeat</h1>
 
-CrossFeat learns to translate local image descriptors between two aligned
-modalities. This repository contains the standard public pipeline used to:
+<h3 align="center">Bridging Imaging Modalities in Feature Descriptor Space</h3>
 
-1. extract paired RootSIFT descriptors,
-2. fit the shared PCA projection,
-3. train a modality-conditioned VAE crosser, and
-4. evaluate retrieval and matching on held-out pairs.
+<p align="center">
+  Paul Schneider<sup>1,2</sup> · Nazim Haouchine<sup>1</sup><br>
+  <sup>1</sup>Harvard Medical School, Brigham and Women's Hospital<br>
+  <sup>2</sup>Technical University of Munich<br>
+  <strong>ECCV 2026</strong>
+</p>
 
-The public input format is intentionally simple. It covers registered 2D image
-pairs and does not prescribe modality-specific preprocessing.
+<p align="center">
+  <a href="https://arxiv.org/abs/2609.00272">Paper</a> ·
+  <a href="https://paulschneider01.github.io/CrossFeat-page/">Project Page</a>
+</p>
+
+<p align="center">
+  <img src="assets/teaser.png" width="100%" alt="CrossFeat matching on MRI–ultrasound and RGB–event pairs. Blue: original descriptors. Green: CrossFeat.">
+</p>
+
+<p align="center">
+  <sub>MRI–ultrasound with SuperPoint (left), RGB–event with SIFT (right). Blue: original descriptors. Green: CrossFeat.</sub>
+</p>
+
+Official implementation of our **ECCV 2026** paper. CrossFeat adapts local
+descriptors across imaging modalities by translating appearance while preserving
+geometry, without retraining the original descriptor.
 
 ## Installation
 
-Use Python 3.11.
+Python 3.11. CUDA recommended for training.
 
 ```bash
 git clone https://github.com/paulschneider01/CrossFeat.git
@@ -24,127 +39,90 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-## Prepare your modality pair
+## Training
 
-Give each image pair the same relative path below its modality folder:
+### 1. Prepare paired images
+
+Use aligned, equal-sized image pairs with matching filenames:
 
 ```text
 my_dataset/
 ├── train/
-│   ├── modality_a/
-│   │   ├── case_001.png
-│   │   └── group/case_002.png
-│   └── modality_b/
-│       ├── case_001.png
-│       └── group/case_002.png
+│   ├── modality_a/pair_001.png
+│   └── modality_b/pair_001.png
 ├── val/
-│   ├── modality_a/...
-│   └── modality_b/...
+│   ├── modality_a/pair_101.png
+│   └── modality_b/pair_101.png
 └── test/
-    ├── modality_a/...
-    └── modality_b/...
+    ├── modality_a/pair_201.png
+    └── modality_b/pair_201.png
 ```
 
-Requirements:
+Supported formats: PNG, JPEG, TIFF, NPY. Split by subject or scene.
 
-- `train`, `val`, and `test` must all be present and non-empty.
-- The two modality folders in a split must contain identical relative paths.
-- Paired images must already be spatially aligned and have identical dimensions.
-- Supported formats are PNG, JPEG, TIFF, and NumPy `.npy` images.
-- Modality names are arbitrary; use the same names in the folders and config.
+### 2. Configure
 
-CrossFeat intentionally does not resize or register public paired-folder inputs.
-Dataset-specific normalization, registration, or cropping should be done before
-creating this layout.
+```bash
+cp config/config_example.yaml config/my_pair.yaml
+```
 
-## Train CrossFeat
-
-Copy [config/config_example.yaml](config/config_example.yaml), then edit only:
+Edit these fields in `config/my_pair.yaml`:
 
 ```yaml
+name: my_pair
+
 datasets:
   - name: paired_folders
-    data_root: /absolute/path/to/my_dataset
+    data_root: /path/to/my_dataset
     modalities: [modality_a, modality_b]
     pairs:
       - {source: modality_a, target: modality_b}
+
+device: cpu  # or cuda
 ```
 
-Use `device: cuda` when training on a CUDA GPU; the example defaults to CPU so
-that configuration validation and small runs work on any machine.
-
-Validate and start training:
+### 3. Train
 
 ```bash
-python train.py --config config/my_pair.yaml --dry_run
 python train.py --config config/my_pair.yaml
 ```
 
-With the example output settings, artifacts are written to:
+Model bundle (keep all three files together):
 
 ```text
-experiments/crossfeat/custom_pair/
+experiments/crossfeat/my_pair/
 ├── best_model.pt
 ├── pca.pkl
-├── config.json
-├── config_source.yaml
-└── logs/
+└── config.json
 ```
 
-`best_model.pt`, `pca.pkl`, and `config.json` together are the trained model.
-Keep all three in the same directory. Training protects existing model
-artifacts from overwrite; change the config `name` for each new run.
+Use a new run `name` for each experiment.
 
-## Evaluate the trained model
+## Evaluation
 
 ```bash
 python evaluate.py \
-  --model_dir experiments/crossfeat/custom_pair \
-  --dataset paired_folders \
-  --data_root /absolute/path/to/my_dataset \
-  --modalities modality_a modality_b \
+  --model_dir experiments/crossfeat/my_pair \
   --split test \
   --output_json results/my_pair.json
 ```
 
-Evaluation reports descriptor retrieval accuracy, mutual-nearest-neighbor
-matching statistics, and target registration error for the aligned test pairs.
-Evaluation chooses CUDA when available and otherwise uses CPU; pass `--device`
-only to override that choice. All test cases are evaluated by default; use
-`--max_cases N` only for a quick subset check.
+Reports Top-1/5/10 retrieval accuracy, inlier ratio (5 px), and TRE (pixels),
+with aggregate and per-pair results.
 
-## Scope
+## Citation
 
-The recommended public path is deliberately limited to one aligned 2D modality
-pair, SIFT/RootSIFT descriptors, shared PCA, and the CrossFeat VAE. Dataset
-loaders used for the paper experiments are retained in `src/io`, but new users
-do not need them. Unpaired training, automatic registration, and
-modality-specific preprocessing recipes are outside this release.
-
-## Repository map
-
-```text
-train.py                    small training entrypoint
-train_universal.py          descriptor extraction and VAE training
-evaluate.py                 standard held-out evaluation entrypoint
-evaluate_core.py            matching and metric implementation
-config/config_example.yaml  starter config for a custom pair
-src/                        model, losses, data loading, and utilities
-tests/                      unit and end-to-end public workflow tests
+```bibtex
+@inproceedings{schneider2026crossfeat,
+  title     = {{CrossFeat}: Bridging Imaging Modalities in Feature Descriptor Space},
+  author    = {Schneider, Paul and Haouchine, Nazim},
+  booktitle = {Computer Vision -- ECCV 2026},
+  pages     = {53--71},
+  year      = {2026},
+  doi       = {10.1007/978-3-032-37174-4_4}
+}
 ```
 
-## Verify the installation
+## License
 
-```bash
-python -m pip install -r requirements-dev.txt
-python -m pytest -q
-```
-
-The end-to-end test creates a tiny aligned dataset, trains for one epoch on CPU,
-loads the emitted checkpoint/PCA/config bundle, and evaluates its test split.
-
-## License and citation
-
-The code is released under the [MIT License](LICENSE). If you use CrossFeat in
-research, please cite the paper and the software metadata in
-[CITATION.cff](CITATION.cff).
+[MIT](LICENSE). Questions? [Open an issue](https://github.com/paulschneider01/CrossFeat/issues).
